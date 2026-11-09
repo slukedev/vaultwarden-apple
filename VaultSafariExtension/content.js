@@ -303,6 +303,8 @@
             box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.14), 0 12px 32px rgba(0, 0, 0, 0.18);
             animation: arrive 220ms cubic-bezier(0.2, 0.9, 0.3, 1);
         }
+        .icon { width: 36px; height: 36px; align-self: center; }
+        .icon svg { display: block; }
         .text { min-width: 0; align-self: center; }
         .title { font-weight: 600; }
         .detail { color: rgba(60, 60, 67, 0.72); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -348,6 +350,7 @@
         card.setAttribute("aria-labelledby", "title");
 
         const icon = document.createElement("div");
+        icon.className = "icon";
         icon.innerHTML = ICON;
         const text = document.createElement("div");
         text.className = "text";
