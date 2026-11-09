@@ -27,6 +27,7 @@ vaultwardenApp/
 
 VaultAutoFillExtension/
 VaultSafariExtension/
+ApplePasswordsBridge/
 ```
 
 ## Dependency direction
@@ -36,6 +37,7 @@ VaultSafariExtension/
 - `Core` contains domain models, state, security utilities, networking contracts, and reusable UI primitives.
 - Feature code may depend on `Core`; `Core` must not depend on a feature.
 - The AutoFill extension is a separate target. Its minimal credential index is encrypted in the shared App Group and published after sync and every local CRUD projection.
+- `ApplePasswordsBridge` is a macOS command-line target embedded in `Contents/MacOS` and registered as a launch agent from `Config/macOS/LaunchAgents`. It compiles only its own folder and `Core/ApplePasswords/ApplePasswordsProtocol.swift`, which the app shares, and has no SDK dependency.
 - The Safari extension is a separate target without the Bitwarden SDK. It compiles only `AutoFillDomain` and `AutoFillSiteIndex`, which have no SDK dependency, and hands any vault work to the app through `vaultwarden-app://` links that wait behind the lock like Home Screen quick actions.
 
 ## Security boundaries
@@ -46,6 +48,7 @@ VaultSafariExtension/
 - Decrypted vault records belong in an encrypted local store with explicit lock-time memory cleanup.
 - AutoFill receives only the minimum credential data required for the selected request.
 - The Safari extension never reads the vault. It reads a site index of truncated HMAC-SHA256 digests (site, site and username, site, username and password) keyed by a random device-only Keychain key, and holds a login typed on the Mac only in a device-only Keychain item that expires after ten minutes. Page paths and queries never leave the page; only the origin does.
+- The Apple Passwords agent runs outside the sandbox and never touches the vault. It accepts XPC only from the app signed by the same team, and the browser's relay script only after it presents a per-launch random token on a loopback socket. Passwords it returns go to the app, which saves them through the normal encrypted CRUD path.
 - Website matching uses registrable domains from a bundled public-suffix list that includes hosting platforms. App URIs (`iosapp://`, `androidapp://`) only ever match the same app, never a website.
 
 ## Synchronization model

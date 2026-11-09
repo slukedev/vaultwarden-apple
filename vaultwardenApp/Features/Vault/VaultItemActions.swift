@@ -80,6 +80,25 @@ final class VaultItemActionModel: ObservableObject {
         }
     }
 
+    #if os(macOS)
+    /// Copies a login into Apple Passwords through the paired connection. Apple decides
+    /// whether it is new or an update, and may ask to authenticate.
+    func saveToApplePasswords(_ item: VaultItem, store: AppStore) {
+        Task {
+            guard await VaultSensitiveAccess.authorize(store),
+                  let current = store.items.first(where: { $0.id == item.id }),
+                  store.canCopyLoginPassword(current), !current.password.isEmpty,
+                  let site = current.websiteURL?.host() else { return }
+            do {
+                try await ApplePasswordsConnection.shared.save(site: site, username: current.username, password: current.password)
+                announce(L10n.string("Saved to Apple Passwords"))
+            } catch {
+                store.userFacingNotice = error.localizedDescription
+            }
+        }
+    }
+    #endif
+
     func toggleFavorite(_ item: VaultItem, store: AppStore) {
         favoriteCount += 1
         Task { await store.toggleFavorite(item) }
@@ -179,6 +198,9 @@ struct VaultItemMenu: View {
     let actions: VaultItemActionModel
     @EnvironmentObject private var store: AppStore
     @Environment(\.openURL) private var openURL
+    #if os(macOS)
+    @ObservedObject private var applePasswords = ApplePasswordsConnection.shared
+    #endif
 
     var body: some View {
         let permissions = VaultItemPermissions(item: item, store: store)
@@ -202,6 +224,14 @@ struct VaultItemMenu: View {
             if let url = VaultItemPresentation.websiteURL(for: item) {
                 Button("Open Website", systemImage: "safari") { openURL(url) }
             }
+            #if os(macOS)
+            if item.type == .login, permissions.canCopyPassword, item.websiteURL != nil,
+               applePasswords.isReady {
+                Button("Save to Apple Passwords", systemImage: "key.horizontal") {
+                    actions.saveToApplePasswords(item, store: store)
+                }
+            }
+            #endif
         }
 
         if permissions.canEdit, !item.isDeleted {

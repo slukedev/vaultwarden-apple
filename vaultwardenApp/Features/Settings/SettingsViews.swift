@@ -8,14 +8,14 @@ import AppKit
 /// The Mac Settings window's panes. Stored, so Settings reopens where it was left and
 /// a feature can open it on its own pane (write the key, then `openSettings()`).
 enum SettingsPane: String {
-    case general, account, security, autoFill, sync, backup, data, sshAgent, about
+    case general, account, security, autoFill, applePasswords, sync, backup, data, sshAgent, about
 
     static let storageKey = "settings.pane"
 
     var requiresUnlockedVault: Bool {
         switch self {
         case .security, .sync, .backup, .data: true
-        case .general, .account, .autoFill, .sshAgent, .about: false
+        case .general, .account, .autoFill, .applePasswords, .sshAgent, .about: false
         }
     }
 }
@@ -48,6 +48,9 @@ struct MacSettingsView: View {
             }
             Tab("AutoFill", systemImage: "key", value: SettingsPane.autoFill) {
                 AutoFillSettingsView()
+            }
+            Tab("Apple Passwords", systemImage: "key.horizontal", value: SettingsPane.applePasswords) {
+                ApplePasswordsSettingsView()
             }
             if canManageVault {
                 Tab("Sync", systemImage: "arrow.triangle.2.circlepath", value: SettingsPane.sync) {

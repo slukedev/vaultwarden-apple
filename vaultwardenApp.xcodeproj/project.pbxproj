@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F1A9B000000000000000000C /* vaultwardenApp/Core/ApplePasswords/ApplePasswordsProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A9B0000000000000000003 /* vaultwardenApp/Core/ApplePasswords/ApplePasswordsProtocol.swift */; };
+		F1A9B000000000000000000D /* ApplePasswordsBridge in Embed Apple Passwords Agent */ = {isa = PBXBuildFile; fileRef = F1A9B0000000000000000001 /* ApplePasswordsBridge */; platformFilters = (macos, ); settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		F1A9B000000000000000000E /* xyz.0xmwehehe.vaultwardenApp.ApplePasswordsBridge.plist in Embed Launch Agent */ = {isa = PBXBuildFile; fileRef = F1A9B0000000000000000002 /* xyz.0xmwehehe.vaultwardenApp.ApplePasswordsBridge.plist */; platformFilters = (macos, ); };
 		E5AF00000000000000000004 /* VaultSafariExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E5AF00000000000000000003 /* VaultSafariExtension.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		E5AF00000000000000000020 /* ../vaultwardenApp/Core/Autofill/AutoFillDomain.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5AF00000000000000000022 /* ../vaultwardenApp/Core/Autofill/AutoFillDomain.swift */; };
 		E5AF00000000000000000021 /* ../vaultwardenApp/Core/Autofill/AutoFillSiteIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5AF00000000000000000023 /* ../vaultwardenApp/Core/Autofill/AutoFillSiteIndex.swift */; };
@@ -27,6 +30,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		F1A9B0000000000000000011 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 24CE3C6D302863650023BAC2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F1A9B0000000000000000006;
+			remoteInfo = ApplePasswordsBridge;
+		};
 		E5AF00000000000000000005 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 24CE3C6D302863650023BAC2 /* Project object */;
@@ -51,6 +61,28 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		F1A9B000000000000000000F /* Embed Apple Passwords Agent */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 6;
+			files = (
+				F1A9B000000000000000000D /* ApplePasswordsBridge in Embed Apple Passwords Agent */,
+			);
+			name = "Embed Apple Passwords Agent";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F1A9B0000000000000000010 /* Embed Launch Agent */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Contents/Library/LaunchAgents;
+			dstSubfolderSpec = 1;
+			files = (
+				F1A9B000000000000000000E /* xyz.0xmwehehe.vaultwardenApp.ApplePasswordsBridge.plist in Embed Launch Agent */,
+			);
+			name = "Embed Launch Agent";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A1B2C3D4E5F600000000000B /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -66,6 +98,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		F1A9B0000000000000000001 /* ApplePasswordsBridge */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ApplePasswordsBridge; sourceTree = BUILT_PRODUCTS_DIR; };
+		F1A9B0000000000000000002 /* xyz.0xmwehehe.vaultwardenApp.ApplePasswordsBridge.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = xyz.0xmwehehe.vaultwardenApp.ApplePasswordsBridge.plist; path = Config/macOS/LaunchAgents/xyz.0xmwehehe.vaultwardenApp.ApplePasswordsBridge.plist; sourceTree = SOURCE_ROOT; };
+		F1A9B0000000000000000003 /* vaultwardenApp/Core/ApplePasswords/ApplePasswordsProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ApplePasswordsProtocol.swift; path = vaultwardenApp/Core/ApplePasswords/ApplePasswordsProtocol.swift; sourceTree = SOURCE_ROOT; };
 		E5AF00000000000000000003 /* VaultSafariExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = VaultSafariExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		E5AF00000000000000000022 /* ../vaultwardenApp/Core/Autofill/AutoFillDomain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../vaultwardenApp/Core/Autofill/AutoFillDomain.swift; sourceTree = "<group>"; };
 		E5AF00000000000000000023 /* ../vaultwardenApp/Core/Autofill/AutoFillSiteIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../vaultwardenApp/Core/Autofill/AutoFillSiteIndex.swift; sourceTree = "<group>"; };
@@ -86,6 +121,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		F1A9B0000000000000000005 /* Exceptions for "ApplePasswordsBridge" folder in "ApplePasswordsBridge" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				ApplePasswordsBridge.entitlements,
+			);
+			target = F1A9B0000000000000000006 /* ApplePasswordsBridge */;
+		};
 		E5AF00000000000000000002 /* Exceptions for "VaultSafariExtension" folder in "VaultSafariExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -104,6 +146,14 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		F1A9B0000000000000000004 /* ApplePasswordsBridge */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				F1A9B0000000000000000005 /* Exceptions for "ApplePasswordsBridge" folder in "ApplePasswordsBridge" target */,
+			);
+			path = ApplePasswordsBridge;
+			sourceTree = "<group>";
+		};
 		E5AF00000000000000000001 /* VaultSafariExtension */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -128,6 +178,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		F1A9B0000000000000000008 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E5AF00000000000000000011 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -168,6 +225,9 @@
 				A1B2C3D4E5F6000000000007 /* VaultAutoFillExtension */,
 				E5AF00000000000000000001 /* VaultSafariExtension */,
 				D00000000000000000000002 /* vaultwardenAppTests */,
+				F1A9B0000000000000000004 /* ApplePasswordsBridge */,
+				F1A9B0000000000000000003 /* vaultwardenApp/Core/ApplePasswords/ApplePasswordsProtocol.swift */,
+				F1A9B0000000000000000002 /* xyz.0xmwehehe.vaultwardenApp.ApplePasswordsBridge.plist */,
 				24CE3C76302863650023BAC2 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -178,6 +238,7 @@
 				24CE3C75302863650023BAC2 /* Vaultwarden.app */,
 				A1B2C3D4E5F6000000000004 /* VaultAutoFillExtension.appex */,
 				E5AF00000000000000000003 /* VaultSafariExtension.appex */,
+				F1A9B0000000000000000001 /* ApplePasswordsBridge */,
 				D00000000000000000000001 /* vaultwardenAppTests.xctest */,
 			);
 			name = Products;
@@ -206,6 +267,27 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		F1A9B0000000000000000006 /* ApplePasswordsBridge */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F1A9B0000000000000000009 /* Build configuration list for PBXNativeTarget "ApplePasswordsBridge" */;
+			buildPhases = (
+				F1A9B0000000000000000007 /* Sources */,
+				F1A9B0000000000000000008 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				F1A9B0000000000000000004 /* ApplePasswordsBridge */,
+			);
+			name = ApplePasswordsBridge;
+			packageProductDependencies = (
+			);
+			productName = ApplePasswordsBridge;
+			productReference = F1A9B0000000000000000001 /* ApplePasswordsBridge */;
+			productType = "com.apple.product-type.tool";
+		};
 		E5AF00000000000000000013 /* VaultSafariExtension */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = E5AF00000000000000000009 /* Build configuration list for PBXNativeTarget "VaultSafariExtension" */;
@@ -236,12 +318,15 @@
 				24CE3C72302863650023BAC2 /* Frameworks */,
 				24CE3C73302863650023BAC2 /* Resources */,
 				A1B2C3D4E5F600000000000B /* Embed Foundation Extensions */,
+				F1A9B000000000000000000F /* Embed Apple Passwords Agent */,
+				F1A9B0000000000000000010 /* Embed Launch Agent */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				A1B2C3D4E5F6000000000011 /* PBXTargetDependency */,
 				E5AF00000000000000000006 /* PBXTargetDependency */,
+				F1A9B0000000000000000012 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				24CE3C77302863650023BAC2 /* vaultwardenApp */,
@@ -316,6 +401,9 @@
 					E5AF00000000000000000013 = {
 						CreatedOnToolsVersion = 26.2;
 					};
+					F1A9B0000000000000000006 = {
+						CreatedOnToolsVersion = 26.2;
+					};
 					D00000000000000000000003 = {
 						CreatedOnToolsVersion = 26.2;
 						TestTargetID = 24CE3C74302863650023BAC2;
@@ -380,6 +468,7 @@
 				24CE3C74302863650023BAC2 /* vaultwardenApp */,
 				A1B2C3D4E5F600000000000C /* VaultAutoFillExtension */,
 				E5AF00000000000000000013 /* VaultSafariExtension */,
+				F1A9B0000000000000000006 /* ApplePasswordsBridge */,
 				D00000000000000000000003 /* vaultwardenAppTests */,
 			);
 		};
@@ -420,6 +509,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		F1A9B0000000000000000007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F1A9B000000000000000000C /* vaultwardenApp/Core/ApplePasswords/ApplePasswordsProtocol.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E5AF00000000000000000010 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -461,6 +558,12 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		F1A9B0000000000000000012 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			platformFilter = macos;
+			target = F1A9B0000000000000000006 /* ApplePasswordsBridge */;
+			targetProxy = F1A9B0000000000000000011 /* PBXContainerItemProxy */;
+		};
 		E5AF00000000000000000006 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = E5AF00000000000000000013 /* VaultSafariExtension */;
@@ -479,6 +582,50 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		F1A9B000000000000000000A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ApplePasswordsBridge/ApplePasswordsBridge.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				CURRENT_PROJECT_VERSION = 8;
+				DEVELOPMENT_TEAM = 5KQGTJX2K7;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = xyz.0xmwehehe.vaultwardenApp.ApplePasswordsBridge;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		F1A9B000000000000000000B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ApplePasswordsBridge/ApplePasswordsBridge.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				CURRENT_PROJECT_VERSION = 8;
+				DEVELOPMENT_TEAM = 5KQGTJX2K7;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = xyz.0xmwehehe.vaultwardenApp.ApplePasswordsBridge;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 		E5AF00000000000000000007 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -923,6 +1070,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		F1A9B0000000000000000009 /* Build configuration list for PBXNativeTarget "ApplePasswordsBridge" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F1A9B000000000000000000A /* Debug */,
+				F1A9B000000000000000000B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		E5AF00000000000000000009 /* Build configuration list for PBXNativeTarget "VaultSafariExtension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
