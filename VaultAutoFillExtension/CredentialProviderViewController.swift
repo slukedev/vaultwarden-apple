@@ -186,7 +186,8 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         pendingSavePasswordRequest = savePasswordRequest
         pendingGeneratePasswordsRequest = nil
         passkeyRequestParameters = nil
-        serviceIdentifiers = [savePasswordRequest.serviceIdentifier.identifier]
+        serviceIdentifiers = Self.matchingIdentifier(savePasswordRequest.serviceIdentifier).map { [$0] } ?? []
+        viewModel.requestDisplayName = savePasswordRequest.serviceIdentifier.displayName
         unlockVault(reason: L10n.string("Authenticate to save this password"))
     }
 
@@ -206,7 +207,8 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         pendingSavePasswordRequest = nil
         pendingGeneratePasswordsRequest = generatePasswordsRequest
         passkeyRequestParameters = nil
-        serviceIdentifiers = [generatePasswordsRequest.serviceIdentifier.identifier]
+        serviceIdentifiers = Self.matchingIdentifier(generatePasswordsRequest.serviceIdentifier).map { [$0] } ?? []
+        viewModel.requestDisplayName = generatePasswordsRequest.serviceIdentifier.displayName
         ensureViewLoaded()
         viewModel.generatedPasswords = AutoFillPasswordGeneration.options(for: generatePasswordsRequest)
         viewModel.serviceIdentifiers = serviceIdentifiers
@@ -232,11 +234,11 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         if let request = credentialRequest as? ASPasswordCredentialRequest {
             mode = .password
             pendingCredentialSelection = .password(recordIdentifier: request.credentialIdentity.recordIdentifier)
-            serviceIdentifiers = [request.credentialIdentity.serviceIdentifier.identifier]
+            serviceIdentifiers = Self.matchingIdentifier(request.credentialIdentity.serviceIdentifier).map { [$0] } ?? []
         } else if let request = credentialRequest as? ASOneTimeCodeCredentialRequest {
             mode = .oneTimeCode
             pendingCredentialSelection = .oneTimeCode(recordIdentifier: request.credentialIdentity.recordIdentifier)
-            serviceIdentifiers = [request.credentialIdentity.serviceIdentifier.identifier]
+            serviceIdentifiers = Self.matchingIdentifier(request.credentialIdentity.serviceIdentifier).map { [$0] } ?? []
         } else if let request = credentialRequest as? ASPasskeyCredentialRequest {
             mode = .passkey
             if let identity = request.credentialIdentity as? ASPasskeyCredentialIdentity {
@@ -256,7 +258,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         pendingRequest = nil
         pendingCredentialSelection = .password(recordIdentifier: credentialIdentity.recordIdentifier)
         passkeyRequestParameters = nil
-        serviceIdentifiers = [credentialIdentity.serviceIdentifier.identifier]
+        serviceIdentifiers = Self.matchingIdentifier(credentialIdentity.serviceIdentifier).map { [$0] } ?? []
         unlockVault(reason: L10n.string("Authenticate to fill this credential"))
     }
 
@@ -282,7 +284,11 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         viewModel.searchText = ""
         viewModel.selectedTextCredential = nil
         self.passkeyRequestParameters = passkeyRequestParameters
-        self.serviceIdentifiers = serviceIdentifiers.map(\.identifier)
+        self.serviceIdentifiers = serviceIdentifiers.compactMap(Self.matchingIdentifier)
+        viewModel.requestDisplayName = serviceIdentifiers.lazy
+            .filter { $0.type == .app }
+            .compactMap(\.displayName)
+            .first { !$0.isEmpty }
         let reasonKey: String = switch mode {
         case .oneTimeCode: "Authenticate to choose a verification code"
         case .textInsert: "Authenticate to insert text from your vault"
@@ -293,6 +299,15 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         }
         let reason = L10n.string(reasonKey)
         unlockVault(reason: reason)
+    }
+
+    /// The string the vault matches against. Apps arrive as App IDs and are saved
+    /// in the vault as `iosapp://` URIs.
+    private static func matchingIdentifier(_ identifier: ASCredentialServiceIdentifier) -> String? {
+        let value = identifier.identifier.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !value.isEmpty else { return nil }
+        if identifier.type == .app { return AutoFillDomain.appURI(fromAppID: value) }
+        return value
     }
 
     private func unlockVault(reason: String) {
@@ -322,6 +337,11 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
                 handleUnlocked(unlocked)
             } catch {
                 guard !isRequestCancelled else { return }
+                // Cancelling Face ID or Touch ID closes AutoFill, as it does in Passwords.
+                if (error as? LAError)?.code == .userCancel {
+                    cancelRequest(code: .userCanceled)
+                    return
+                }
                 if isRecoverableAuthenticationError(error) {
                     pendingUnlockReason = reason
                     showAuthenticationRetry(reason: reason)
@@ -481,9 +501,10 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         viewModel.folders = payload.folders ?? []
         viewModel.serviceIdentifiers = serviceIdentifiers
         viewModel.state = .passwordSave
+        let title = request.title?.trimmingCharacters(in: .whitespacesAndNewlines)
         viewModel.beginCreate(
-            suggestedURI: request.serviceIdentifier.identifier,
-            suggestedName: request.title,
+            suggestedURI: serviceIdentifiers.first ?? request.serviceIdentifier.identifier,
+            suggestedName: title?.isEmpty == false ? title : request.serviceIdentifier.displayName,
             username: request.credential.user,
             password: request.credential.password
         )
@@ -1238,6 +1259,8 @@ private final class AutoFillCredentialListViewModel: ObservableObject {
     /// The ranked sections narrowed by the current search.
     @Published private(set) var visibleSections: AutoFillPickerSections = .empty
     @Published var serviceIdentifiers: [String] = []
+    /// The app's own name when an app, not a website, is asking.
+    @Published var requestDisplayName: String?
     @Published var showsWebsiteIcons = true
     @Published var websiteIconServerURL: URL?
     @Published var searchText = "" {
@@ -1320,7 +1343,7 @@ private final class AutoFillCredentialListViewModel: ObservableObject {
     }
 
     var requestHost: String? {
-        serviceIdentifiers.compactMap(AutoFillSearch.displayHost).first
+        requestDisplayName ?? serviceIdentifiers.compactMap(AutoFillSearch.displayHost).first
     }
 
     var title: String {
@@ -1436,6 +1459,8 @@ private final class AutoFillCredentialListViewModel: ObservableObject {
             newLoginName = suggestedName
         } else if let host = AutoFillSearch.displayHost(suggestedURI) {
             newLoginName = host
+        } else if let requestDisplayName, !requestDisplayName.isEmpty {
+            newLoginName = requestDisplayName
         } else {
             newLoginName = suggestedURI
         }
@@ -2494,11 +2519,7 @@ private struct AutoFillCredentialRow: View {
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(record.name)
-                    #if os(macOS)
-                    .font(.body.weight(.medium))
-                    #else
-                    .font(.body.weight(.semibold))
-                    #endif
+                    .font(.body)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                 if !secondaryText.isEmpty {

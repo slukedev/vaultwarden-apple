@@ -256,13 +256,25 @@ nonisolated struct AutoFillCredentialRecord: Codable, Hashable, Identifiable, Se
         let saved = rule.uri.trimmingCharacters(in: .whitespacesAndNewlines)
         let candidate = requested.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !saved.isEmpty, !candidate.isEmpty else { return nil }
+        let matchType = rule.match ?? defaultMatchType
+        guard matchType != .never else { return nil }
 
-        switch rule.match ?? defaultMatchType {
+        // An app is only ever the same app. Websites never match app URIs or the reverse.
+        let savedApp = AutoFillDomain.appIdentifier(saved)
+        let requestedApp = AutoFillDomain.appIdentifier(candidate)
+        if savedApp != nil || requestedApp != nil {
+            guard let savedApp, savedApp == requestedApp else { return nil }
+            return .exact
+        }
+
+        switch matchType {
         case .baseDomain:
-            guard let savedHost = normalizedHost(saved),
-                  let requestedHost = normalizedHost(candidate),
-                  registrableDomain(savedHost) == registrableDomain(requestedHost) else { return nil }
-            return .baseDomain
+            guard let savedHost = AutoFillDomain.host(saved),
+                  let requestedHost = AutoFillDomain.host(candidate),
+                  AutoFillDomain.registrableDomain(savedHost)
+                    == AutoFillDomain.registrableDomain(requestedHost) else { return nil }
+            // The same host is a closer match than a sibling subdomain.
+            return savedHost == requestedHost ? .host : .baseDomain
         case .host:
             guard let savedResource = resource(saved),
                   let requestedResource = resource(candidate),
@@ -285,45 +297,10 @@ nonisolated struct AutoFillCredentialRecord: Codable, Hashable, Identifiable, Se
     }
 
     private static func resource(_ value: String) -> (host: String, port: Int?)? {
+        guard let host = AutoFillDomain.host(value) else { return nil }
         let candidate = value.contains("://") ? value : "https://\(value)"
-        guard let components = URLComponents(string: candidate),
-              let host = components.host?.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: ".")),
-              !host.isEmpty else { return nil }
-        return (host, components.port)
+        return (host, URLComponents(string: candidate.trimmingCharacters(in: .whitespacesAndNewlines))?.port)
     }
-
-    private static func normalizedHost(_ value: String) -> String? {
-        resource(value)?.host
-    }
-
-    private static func registrableDomain(_ host: String) -> String {
-        if isIPAddress(host) { return host }
-        let labels = host.split(separator: ".").map(String.init)
-        guard labels.count > 2 else { return host }
-        let twoLabelSuffix = labels.suffix(2).joined(separator: ".")
-        if commonTwoLabelPublicSuffixes.contains(twoLabelSuffix), labels.count >= 3 {
-            return labels.suffix(3).joined(separator: ".")
-        }
-        return labels.suffix(2).joined(separator: ".")
-    }
-
-    private static func isIPAddress(_ host: String) -> Bool {
-        if host.contains(":") { return true }
-        let components = host.split(separator: ".")
-        return components.count == 4 && components.allSatisfy {
-            guard let number = Int($0) else { return false }
-            return (0...255).contains(number)
-        }
-    }
-
-    private static let commonTwoLabelPublicSuffixes: Set<String> = [
-        "ac.id", "co.id", "go.id", "or.id", "sch.id", "web.id",
-        "ac.uk", "co.uk", "gov.uk", "org.uk",
-        "com.au", "net.au", "org.au", "edu.au",
-        "co.jp", "ne.jp", "or.jp", "co.kr", "com.br", "com.cn",
-        "com.hk", "com.mx", "com.my", "com.ph", "com.sg", "com.tr",
-        "co.in", "co.nz", "co.za"
-    ]
 }
 
 nonisolated enum AutoFillItemType: String, Codable, Hashable, Sendable {
@@ -596,7 +573,7 @@ nonisolated enum AutoFillSharedVaultError: LocalizedError {
 /// Shared by the app and Credential Provider extension. The App Group file never contains
 /// plaintext credentials: it is sealed with a key derived from the vault key and protected by the device-unlock policy.
 nonisolated enum AutoFillSharedVault {
-    static let appGroupIdentifier = "group.xyz.0xmwehehe.vaultwardenApp"
+    static let appGroupIdentifier = AutoFillContainer.appGroupIdentifier
     static let vaultKeyService = "xyz.0xmwehehe.vaultwardenApp.session.vault-key.v2"
     static let payloadKeyService = "xyz.0xmwehehe.vaultwardenApp.autofill.payload-key.v2"
     static let writeSessionUpdateService = "xyz.0xmwehehe.vaultwardenApp.autofill.write-session-update"
@@ -676,16 +653,7 @@ nonisolated enum AutoFillSharedVault {
         value == .baseDomain || value == .host || value == .exact || value == .never
     }
 
-    static var keychainAccessGroup: String {
-        let fallback = "5KQGTJX2K7.xyz.0xmwehehe.vaultwardenApp.shared"
-        guard let configured = Bundle.main.object(
-            forInfoDictionaryKey: "VaultSharedKeychainAccessGroup"
-        ) as? String,
-              configured != "xyz.0xmwehehe.vaultwardenApp.shared" else {
-            return fallback
-        }
-        return configured
-    }
+    static var keychainAccessGroup: String { AutoFillContainer.keychainAccessGroup }
 
     static func publish(payload: AutoFillVaultPayload, userKey: Data) throws {
         try DeviceUnlockPolicy.withLock {
@@ -709,6 +677,28 @@ nonisolated enum AutoFillSharedVault {
             defaults.set(payload.accountReference, forKey: activeReferenceKey)
             defaults.set(payload.generatedAt, forKey: publishedAtKey)
             defaults.set(payload.credentials.filter(\.isLogin).count, forKey: publishedCountKey)
+        }
+        // The Safari extension's view of the vault. It's a convenience, so a failure
+        // here never stops AutoFill itself from updating.
+        try? AutoFillSiteIndex.publish(entries: siteIndexEntries(for: payload.credentials))
+    }
+
+    static func siteIndexEntries(
+        for records: [AutoFillCredentialRecord],
+        defaultMatchType: AutoFillURIMatchType = defaultURIMatchType
+    ) -> [AutoFillSiteIndex.Entry] {
+        records.compactMap { record in
+            guard record.isLogin, !record.password.isEmpty else { return nil }
+            let hosts = AutoFillCredentialIdentityBuilder.suggestedHosts(
+                for: record,
+                defaultMatchType: defaultMatchType
+            )
+            guard !hosts.isEmpty else { return nil }
+            return AutoFillSiteIndex.Entry(
+                sites: Set(hosts.map(AutoFillDomain.registrableDomain)),
+                username: record.username,
+                password: record.password
+            )
         }
     }
 
@@ -761,6 +751,8 @@ nonisolated enum AutoFillSharedVault {
     }
 
     static func clear(reference: String? = nil) throws {
+        AutoFillSiteIndex.clear()
+        SafariCapturedLogin.removeAll()
         let url = try vaultURL()
         if FileManager.default.fileExists(atPath: url.path) {
             try FileManager.default.removeItem(at: url)
@@ -1007,7 +999,7 @@ nonisolated enum AutoFillSearch {
     /// The host people recognize: no scheme, path, port or leading "www.".
     static func displayHost(_ value: String) -> String? {
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return nil }
+        guard !trimmed.isEmpty, AutoFillDomain.appIdentifier(trimmed) == nil else { return nil }
         let candidate = trimmed.contains("://") ? trimmed : "https://\(trimmed)"
         guard var host = URLComponents(string: candidate)?.host?.lowercased()
             .trimmingCharacters(in: CharacterSet(charactersIn: ".")),
@@ -1022,6 +1014,14 @@ nonisolated enum AutoFillSearch {
         if folded.contains("://"), let host = displayHost(folded) { return host }
         if folded.hasPrefix("www."), folded.count > 4 { return String(folded.dropFirst(4)) }
         return folded
+    }
+
+    /// A query split into words. A pasted URL stays one word: its host.
+    static func queryWords(_ query: String) -> [String] {
+        let folded = fold(query)
+        if folded.contains("://") { return [normalizedQuery(folded)].filter { !$0.isEmpty } }
+        return folded.split(whereSeparator: \.isWhitespace).map { normalizedQuery(String($0)) }
+            .filter { !$0.isEmpty }
     }
 
     /// Distinct hosts for a record, in the order its URIs were saved.
@@ -1081,13 +1081,17 @@ nonisolated struct AutoFillPickerSections: Sendable, Equatable {
         suggested.first { $0.id == id } ?? other.first { $0.id == id }
     }
 
-    /// Filtering keeps each section's order, so typing never re-sorts.
+    /// Filtering keeps each section's order, so typing never re-sorts. Every word
+    /// must appear somewhere, so "github work" finds the work account on GitHub.
     func filtered(by query: String) -> Self {
-        let needle = AutoFillSearch.normalizedQuery(query)
-        guard !needle.isEmpty else { return self }
+        let words = AutoFillSearch.queryWords(query)
+        guard !words.isEmpty else { return self }
+        let matches: (AutoFillPickerEntry) -> Bool = { entry in
+            words.allSatisfy { entry.searchKey.contains($0) }
+        }
         return Self(
-            suggested: suggested.filter { $0.searchKey.contains(needle) },
-            other: other.filter { $0.searchKey.contains(needle) },
+            suggested: suggested.filter(matches),
+            other: other.filter(matches),
             isContextual: isContextual
         )
     }

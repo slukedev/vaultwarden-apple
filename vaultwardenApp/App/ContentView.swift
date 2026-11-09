@@ -54,7 +54,7 @@ struct ContentView: View {
         .animation(.smooth(duration: 0.3), value: hasCompletedOnboarding)
         .tint(.vaultBlue)
         .preferredColorScheme(preferredColorScheme)
-        .onOpenURL(perform: receiveVerificationCodeSetup)
+        .onOpenURL(perform: receiveURL)
         .sheet(item: $presentedCodeSetup) { request in
             AddEditVaultItemView(
                 prefilledName: request.name,
@@ -172,6 +172,15 @@ struct ContentView: View {
         case .light: .light
         case .dark: .dark
         }
+    }
+
+    private func receiveURL(_ url: URL) {
+        // The Safari extension hands its work to the vault, which stays behind its lock.
+        if let link = SafariAppLink(url: url) {
+            HomeQuickActionRouter.shared.enqueue(HomeQuickAction(safariLink: link))
+            return
+        }
+        receiveVerificationCodeSetup(url)
     }
 
     private func receiveVerificationCodeSetup(_ url: URL) {

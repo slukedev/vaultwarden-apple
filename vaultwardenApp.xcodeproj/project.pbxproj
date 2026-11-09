@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E5AF00000000000000000004 /* VaultSafariExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E5AF00000000000000000003 /* VaultSafariExtension.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		E5AF00000000000000000020 /* ../vaultwardenApp/Core/Autofill/AutoFillDomain.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5AF00000000000000000022 /* ../vaultwardenApp/Core/Autofill/AutoFillDomain.swift */; };
+		E5AF00000000000000000021 /* ../vaultwardenApp/Core/Autofill/AutoFillSiteIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5AF00000000000000000023 /* ../vaultwardenApp/Core/Autofill/AutoFillSiteIndex.swift */; };
+		E5AF00000000000000000024 /* ../vaultwardenApp/Core/Autofill/AutoFillDomain.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5AF00000000000000000022 /* ../vaultwardenApp/Core/Autofill/AutoFillDomain.swift */; };
+		E5AF00000000000000000025 /* ../vaultwardenApp/Core/Autofill/AutoFillSiteIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5AF00000000000000000023 /* ../vaultwardenApp/Core/Autofill/AutoFillSiteIndex.swift */; };
 		A1B2C3D4E5F6000000000001 /* CredentialProviderViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000002 /* CredentialProviderViewController.swift */; };
 		A1B2C3D4E5F6000000000003 /* VaultAutoFillExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000004 /* VaultAutoFillExtension.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A1B2C3D4E5F6000000000012 /* ../vaultwardenApp/Core/Autofill/AutoFillSharedVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000000000013 /* ../vaultwardenApp/Core/Autofill/AutoFillSharedVault.swift */; };
@@ -22,6 +27,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		E5AF00000000000000000005 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 24CE3C6D302863650023BAC2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E5AF00000000000000000013;
+			remoteInfo = VaultSafariExtension;
+		};
 		A1B2C3D4E5F6000000000010 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 24CE3C6D302863650023BAC2 /* Project object */;
@@ -46,6 +58,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				A1B2C3D4E5F6000000000003 /* VaultAutoFillExtension.appex in Embed Foundation Extensions */,
+				E5AF00000000000000000004 /* VaultSafariExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -53,6 +66,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		E5AF00000000000000000003 /* VaultSafariExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = VaultSafariExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		E5AF00000000000000000022 /* ../vaultwardenApp/Core/Autofill/AutoFillDomain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../vaultwardenApp/Core/Autofill/AutoFillDomain.swift; sourceTree = "<group>"; };
+		E5AF00000000000000000023 /* ../vaultwardenApp/Core/Autofill/AutoFillSiteIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../vaultwardenApp/Core/Autofill/AutoFillSiteIndex.swift; sourceTree = "<group>"; };
 		24CE3C75302863650023BAC2 /* Vaultwarden.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Vaultwarden.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1B2C3D4E5F6000000000002 /* CredentialProviderViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialProviderViewController.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6000000000004 /* VaultAutoFillExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = VaultAutoFillExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -70,6 +86,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		E5AF00000000000000000002 /* Exceptions for "VaultSafariExtension" folder in "VaultSafariExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"Info-macOS.plist",
+				Info.plist,
+			);
+			target = E5AF00000000000000000013 /* VaultSafariExtension */;
+		};
 		C0D3A11F0000000000000001 /* Exceptions for "vaultwardenApp" folder in "vaultwardenApp" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -80,6 +104,14 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		E5AF00000000000000000001 /* VaultSafariExtension */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E5AF00000000000000000002 /* Exceptions for "VaultSafariExtension" folder in "VaultSafariExtension" target */,
+			);
+			path = VaultSafariExtension;
+			sourceTree = "<group>";
+		};
 		24CE3C77302863650023BAC2 /* vaultwardenApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -96,6 +128,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		E5AF00000000000000000011 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		24CE3C72302863650023BAC2 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -127,6 +166,7 @@
 			children = (
 				24CE3C77302863650023BAC2 /* vaultwardenApp */,
 				A1B2C3D4E5F6000000000007 /* VaultAutoFillExtension */,
+				E5AF00000000000000000001 /* VaultSafariExtension */,
 				D00000000000000000000002 /* vaultwardenAppTests */,
 				24CE3C76302863650023BAC2 /* Products */,
 			);
@@ -137,6 +177,7 @@
 			children = (
 				24CE3C75302863650023BAC2 /* Vaultwarden.app */,
 				A1B2C3D4E5F6000000000004 /* VaultAutoFillExtension.appex */,
+				E5AF00000000000000000003 /* VaultSafariExtension.appex */,
 				D00000000000000000000001 /* vaultwardenAppTests.xctest */,
 			);
 			name = Products;
@@ -148,6 +189,8 @@
 				A1B2C3D4E5F6000000000002 /* CredentialProviderViewController.swift */,
 				A1B2C3D4E5F6000000000013 /* ../vaultwardenApp/Core/Autofill/AutoFillSharedVault.swift */,
 				A1B2C3D4E5F6000000000015 /* ../vaultwardenApp/Core/Autofill/AutoFillPasskeySupport.swift */,
+				E5AF00000000000000000022 /* ../vaultwardenApp/Core/Autofill/AutoFillDomain.swift */,
+				E5AF00000000000000000023 /* ../vaultwardenApp/Core/Autofill/AutoFillSiteIndex.swift */,
 				A1B2C3D4E5F6000000000019 /* ../vaultwardenApp/Core/Localization/Localization.swift */,
 				A1B2C3D4E5F6000000000022 /* ../vaultwardenApp/Core/Networking/APIModels.swift */,
 				A1B2C3D4E5F6000000000023 /* ../vaultwardenApp/Core/Networking/SyncModels.swift */,
@@ -163,6 +206,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		E5AF00000000000000000013 /* VaultSafariExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E5AF00000000000000000009 /* Build configuration list for PBXNativeTarget "VaultSafariExtension" */;
+			buildPhases = (
+				E5AF00000000000000000010 /* Sources */,
+				E5AF00000000000000000011 /* Frameworks */,
+				E5AF00000000000000000012 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				E5AF00000000000000000001 /* VaultSafariExtension */,
+			);
+			name = VaultSafariExtension;
+			packageProductDependencies = (
+			);
+			productName = VaultSafariExtension;
+			productReference = E5AF00000000000000000003 /* VaultSafariExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		24CE3C74302863650023BAC2 /* vaultwardenApp */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 24CE3C80302863660023BAC2 /* Build configuration list for PBXNativeTarget "vaultwardenApp" */;
@@ -176,6 +241,7 @@
 			);
 			dependencies = (
 				A1B2C3D4E5F6000000000011 /* PBXTargetDependency */,
+				E5AF00000000000000000006 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				24CE3C77302863650023BAC2 /* vaultwardenApp */,
@@ -247,6 +313,9 @@
 					A1B2C3D4E5F600000000000C = {
 						CreatedOnToolsVersion = 26.2;
 					};
+					E5AF00000000000000000013 = {
+						CreatedOnToolsVersion = 26.2;
+					};
 					D00000000000000000000003 = {
 						CreatedOnToolsVersion = 26.2;
 						TestTargetID = 24CE3C74302863650023BAC2;
@@ -310,12 +379,20 @@
 			targets = (
 				24CE3C74302863650023BAC2 /* vaultwardenApp */,
 				A1B2C3D4E5F600000000000C /* VaultAutoFillExtension */,
+				E5AF00000000000000000013 /* VaultSafariExtension */,
 				D00000000000000000000003 /* vaultwardenAppTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		E5AF00000000000000000012 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		24CE3C73302863650023BAC2 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -343,6 +420,15 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		E5AF00000000000000000010 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E5AF00000000000000000024 /* ../vaultwardenApp/Core/Autofill/AutoFillDomain.swift in Sources */,
+				E5AF00000000000000000025 /* ../vaultwardenApp/Core/Autofill/AutoFillSiteIndex.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		24CE3C71302863650023BAC2 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -360,6 +446,8 @@
 				A1B2C3D4E5F6000000000018 /* ../vaultwardenApp/Core/Localization/Localization.swift in Sources */,
 				A1B2C3D4E5F6000000000020 /* ../vaultwardenApp/Core/Networking/APIModels.swift in Sources */,
 				A1B2C3D4E5F6000000000021 /* ../vaultwardenApp/Core/Networking/SyncModels.swift in Sources */,
+				E5AF00000000000000000020 /* ../vaultwardenApp/Core/Autofill/AutoFillDomain.swift in Sources */,
+				E5AF00000000000000000021 /* ../vaultwardenApp/Core/Autofill/AutoFillSiteIndex.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -373,6 +461,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		E5AF00000000000000000006 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E5AF00000000000000000013 /* VaultSafariExtension */;
+			targetProxy = E5AF00000000000000000005 /* PBXContainerItemProxy */;
+		};
 		A1B2C3D4E5F6000000000011 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = A1B2C3D4E5F600000000000C /* VaultAutoFillExtension */;
@@ -386,6 +479,84 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		E5AF00000000000000000007 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = VaultSafariExtension/VaultSafariExtension.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "VaultSafariExtension/VaultSafariExtension-macOS.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 8;
+				DEVELOPMENT_TEAM = 5KQGTJX2K7;
+				"ENABLE_HARDENED_RUNTIME[sdk=macosx*]" = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = VaultSafariExtension/Info.plist;
+				"INFOPLIST_FILE[sdk=macosx*]" = "VaultSafariExtension/Info-macOS.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = xyz.0xmwehehe.vaultwardenApp.safari;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		E5AF00000000000000000008 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = VaultSafariExtension/VaultSafariExtension.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "VaultSafariExtension/VaultSafariExtension-macOS.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 8;
+				DEVELOPMENT_TEAM = 5KQGTJX2K7;
+				"ENABLE_HARDENED_RUNTIME[sdk=macosx*]" = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = VaultSafariExtension/Info.plist;
+				"INFOPLIST_FILE[sdk=macosx*]" = "VaultSafariExtension/Info-macOS.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = xyz.0xmwehehe.vaultwardenApp.safari;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		24CE3C7E302863660023BAC2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -752,6 +923,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		E5AF00000000000000000009 /* Build configuration list for PBXNativeTarget "VaultSafariExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E5AF00000000000000000007 /* Debug */,
+				E5AF00000000000000000008 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		24CE3C70302863650023BAC2 /* Build configuration list for PBXProject "vaultwardenApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

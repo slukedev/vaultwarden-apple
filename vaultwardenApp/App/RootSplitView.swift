@@ -30,6 +30,7 @@ struct RootSplitView: View {
     @State private var isRegularBulkSelecting = false
     @State private var showingQuickActionPassword = false
     @State private var showingQuickActionGenerator = false
+    @State private var safariLoginDraft: SafariLoginDraft?
     @FocusState private var compactSearchFocused: Bool
     @FocusState private var regularSearchFocused: Bool
 
@@ -47,6 +48,7 @@ struct RootSplitView: View {
             if isLocked {
                 showingQuickActionPassword = false
                 showingQuickActionGenerator = false
+                safariLoginDraft = nil
             }
             handlePendingQuickActionIfPossible()
         }
@@ -83,6 +85,18 @@ struct RootSplitView: View {
         .sheet(isPresented: $showingQuickActionGenerator) {
             GeneratorView()
                 .environmentObject(store)
+        }
+        .sheet(item: $safariLoginDraft) { draft in
+            AddEditVaultItemView(
+                existingItem: draft.existingItem,
+                prefilledPassword: draft.password,
+                prefilledName: draft.name,
+                prefilledUsername: draft.username,
+                prefilledType: .login,
+                prefilledWebsite: draft.website,
+                replacementPassword: draft.existingItem == nil ? nil : draft.password
+            )
+            .environmentObject(store)
         }
     }
 
@@ -233,9 +247,28 @@ struct RootSplitView: View {
             }
         case .generator:
             showingQuickActionGenerator = true
+        case let .newLogin(website):
+            safariLoginDraft = SafariLoginDraft(website: website)
+        case let .saveSafariLogin(id):
+            if let login = SafariCapturedLogin.load(id: id) {
+                SafariCapturedLogin.remove(id: id)
+                safariLoginDraft = SafariLoginDraft(login, existingItem: login.isPasswordChange ? existingLogin(for: login) : nil)
+            } else {
+                store.userFacingNotice = L10n.string("This password is no longer waiting to be saved. Sign in again in Safari to save it.")
+            }
         }
 
         quickActions.consume(action)
+    }
+
+    /// The saved login a Safari password change belongs to: same site, same username.
+    private func existingLogin(for login: SafariCapturedLogin) -> VaultItem? {
+        let site = AutoFillDomain.host(login.page).map(AutoFillDomain.registrableDomain)
+        return store.items.first { item in
+            item.type == .login && !item.isDeleted
+                && item.username.caseInsensitiveCompare(login.username) == .orderedSame
+                && item.websiteURIs.contains { AutoFillDomain.host($0).map(AutoFillDomain.registrableDomain) == site }
+        }
     }
 
     private func focusSearchAfterNavigationChange(compact: Bool) {
@@ -817,5 +850,31 @@ struct ProfileAvatarView: View {
                 .frame(width: 36, height: 36)
                 .background(Color.accentColor.gradient, in: .circle)
         }
+    }
+}
+
+/// What the Safari extension asked the app to save.
+private struct SafariLoginDraft: Identifiable {
+    let id = UUID()
+    let existingItem: VaultItem?
+    let name: String
+    let username: String
+    let password: String
+    let website: String
+
+    init(website: String) {
+        existingItem = nil
+        name = AutoFillSearch.displayHost(website) ?? ""
+        username = ""
+        password = ""
+        self.website = website
+    }
+
+    init(_ login: SafariCapturedLogin, existingItem: VaultItem?) {
+        self.existingItem = existingItem
+        name = login.host
+        username = login.username
+        password = login.password
+        website = login.page
     }
 }

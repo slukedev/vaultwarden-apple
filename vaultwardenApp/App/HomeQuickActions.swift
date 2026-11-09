@@ -11,6 +11,21 @@ nonisolated enum HomeQuickAction: Equatable, Sendable {
     case search(query: String)
     case verificationCodes
     case generator
+    /// A new login for the website open in Safari.
+    case newLogin(website: String)
+    /// A login typed into Safari on the Mac, waiting in the Keychain to be saved.
+    case saveSafariLogin(id: String)
+
+    init(safariLink: SafariAppLink) {
+        switch safariLink {
+        case let .search(website):
+            self = .search(query: AutoFillSearch.displayHost(website) ?? "")
+        case let .newLogin(website):
+            self = .newLogin(website: website)
+        case let .saveLogin(id):
+            self = .saveSafariLogin(id: id)
+        }
+    }
 
     /// `UIApplicationShortcutItemType` values in Info.plist.
     nonisolated enum ShortcutType {
@@ -32,7 +47,7 @@ nonisolated enum HomeQuickAction: Equatable, Sendable {
 
     var shortcutType: String {
         switch self {
-        case .newPassword: ShortcutType.newPassword
+        case .newPassword, .newLogin, .saveSafariLogin: ShortcutType.newPassword
         case .search: ShortcutType.search
         case .verificationCodes: ShortcutType.verificationCodes
         case .generator: ShortcutType.generator

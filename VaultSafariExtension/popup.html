@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Vaultwarden</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <main>
+        <header>
+            <img src="icon-64.png" width="32" height="32" alt="">
+            <div class="heading">
+                <h1 id="site">Vaultwarden</h1>
+                <p id="status" aria-live="polite">&nbsp;</p>
+            </div>
+        </header>
+        <ul id="actions" role="menu">
+            <li role="none" hidden data-action="fill">
+                <button role="menuitem">
+                    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 3.5a4 4 0 0 1 3.9 4.9l5.1 5.1v3h-3v-1.5H12V13h-1.5l-1-1A4 4 0 1 1 7.5 3.5zm-.6 2.4a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2z"/></svg>
+                    <span>Fill Password</span>
+                </button>
+            </li>
+            <li role="none" hidden data-action="new">
+                <button role="menuitem">
+                    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                    <span>New Password</span>
+                </button>
+            </li>
+            <li role="none" hidden data-action="search">
+                <button role="menuitem">
+                    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8.5 3.5a5 5 0 0 1 4 8l3.6 3.6-1.1 1.1-3.6-3.6a5 5 0 1 1-2.9-9.1zm0 1.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8z"/></svg>
+                    <span>Show in Vaultwarden</span>
+                </button>
+            </li>
+        </ul>
+    </main>
+    <script src="popup.js"></script>
+</body>
+</html>
