@@ -86,6 +86,8 @@ struct AddEditVaultItemView: View {
         prefilledSSHFingerprint: String = "",
         prefilledType: VaultItemType = .login,
         prefilledFolder: String = "",
+        prefilledWebsite: String = "",
+        replacementPassword: String? = nil,
         presentation: Presentation = .sheet,
         onFinish: (() -> Void)? = nil
     ) {
@@ -95,8 +97,8 @@ struct AddEditVaultItemView: View {
         self.onFinish = onFinish
         _name = State(initialValue: existingItem?.name ?? prefilledName)
         _username = State(initialValue: existingItem?.username ?? prefilledUsername)
-        _password = State(initialValue: existingItem?.password ?? prefilledPassword)
-        let initialURIs = existingItem?.websiteURIs ?? []
+        _password = State(initialValue: replacementPassword ?? existingItem?.password ?? prefilledPassword)
+        let initialURIs = existingItem?.websiteURIs ?? (prefilledWebsite.isEmpty ? [] : [prefilledWebsite])
         _websiteURIs = State(
             initialValue: (initialURIs.isEmpty ? [""] : initialURIs)
                 .map { EditableWebsiteURI(value: $0) }

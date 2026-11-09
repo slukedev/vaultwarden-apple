@@ -2,6 +2,7 @@ import AuthenticationServices
 import SwiftUI
 #if os(macOS)
 import AppKit
+import SafariServices
 #endif
 
 /// Whether the system fills from Vaultwarden, how it matches websites, and what it
@@ -14,6 +15,9 @@ struct AutoFillSettingsView: View {
     @State private var publishedAt: Date?
     @State private var isRequestingProvider = false
     @State private var settingsError: String?
+    #if os(macOS)
+    @State private var isSafariExtensionEnabled: Bool?
+    #endif
 
     private var canManageVault: Bool { store.isAuthenticated && store.isLocked == false }
 
@@ -87,6 +91,8 @@ struct AutoFillSettingsView: View {
                 }
             }
 
+            safariSection
+
             if canManageVault {
                 Section {
                     Picker("Match Websites", selection: defaultURIMatchDetection) {
@@ -150,6 +156,27 @@ struct AutoFillSettingsView: View {
         }
     }
 
+    @ViewBuilder
+    private var safariSection: some View {
+        #if os(macOS)
+        Section {
+            SettingsDetailRow(
+                title: Text("Safari Extension"),
+                detail: Text("Saves passwords you type in Safari and helps AutoFill find login fields.")
+            ) {
+                Button(isSafariExtensionEnabled == true ? "Safari Settings…" : "Turn On…", action: openSafariExtensionSettings)
+            }
+        }
+        #else
+        Section {
+        } header: {
+            Text("Safari Extension")
+        } footer: {
+            Text("Helps AutoFill find login and verification code fields on more websites. Turn it on in Settings ▸ Apps ▸ Safari ▸ Extensions.")
+        }
+        #endif
+    }
+
     private var heroLine: Text {
         var line = SettingsWords.autoFillHeadline(isEnabled: isProviderEnabled, isMac: isMac)
         if isProviderEnabled == true, canManageVault, publishedCount > 0 {
@@ -195,12 +222,39 @@ struct AutoFillSettingsView: View {
     }
 
     private func refreshProviderStatus() async {
+        #if os(macOS)
+        isSafariExtensionEnabled = await Self.safariExtensionState()
+        #endif
         let state = await ASCredentialIdentityStore.shared.state()
         isProviderEnabled = state.isEnabled
         let defaults = UserDefaults(suiteName: AutoFillSharedVault.appGroupIdentifier)
         publishedCount = defaults?.integer(forKey: AutoFillSharedVault.publishedCountKey) ?? 0
         publishedAt = defaults?.object(forKey: AutoFillSharedVault.publishedAtKey) as? Date
     }
+
+    #if os(macOS)
+    private static var safariExtensionIdentifier: String {
+        (Bundle.main.bundleIdentifier ?? "xyz.0xmwehehe.vaultwardenApp") + ".safari"
+    }
+
+    private static func safariExtensionState() async -> Bool? {
+        await withCheckedContinuation { continuation in
+            SFSafariExtensionManager.getStateOfSafariExtension(withIdentifier: safariExtensionIdentifier) { state, _ in
+                continuation.resume(returning: state?.isEnabled)
+            }
+        }
+    }
+
+    private func openSafariExtensionSettings() {
+        settingsError = nil
+        SFSafariApplication.showPreferencesForExtension(withIdentifier: Self.safariExtensionIdentifier) { error in
+            guard error != nil else { return }
+            Task { @MainActor in
+                settingsError = L10n.string("Safari couldn’t open its settings. Open Safari, then choose Safari ▸ Settings ▸ Extensions.")
+            }
+        }
+    }
+    #endif
 
     private func requestProvider() async {
         isRequestingProvider = true

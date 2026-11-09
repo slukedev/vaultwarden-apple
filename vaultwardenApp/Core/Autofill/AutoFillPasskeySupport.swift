@@ -1218,30 +1218,35 @@ private actor PasskeyLocalUserDataRepository: LocalUserDataKeyStateRepository {
 nonisolated enum AutoFillCredentialIdentityBuilder {
     static func identities(
         for payload: AutoFillVaultPayload,
-        usage: AutoFillUsageSnapshot
+        usage: AutoFillUsageSnapshot,
+        defaultMatchType: AutoFillURIMatchType = AutoFillSharedVault.defaultURIMatchType
     ) -> [any ASCredentialIdentity] {
         var identities: [any ASCredentialIdentity] = []
         for record in payload.credentials where record.isLogin {
-            guard let serviceValue = record.serviceIdentifier else { continue }
-            let service = ASCredentialServiceIdentifier(identifier: serviceValue, type: .domain)
+            let hosts = suggestedHosts(for: record, defaultMatchType: defaultMatchType)
+            guard !hosts.isEmpty else { continue }
             let rank = usage.rank(id: record.id)
-            if !record.password.isEmpty {
-                let password = ASPasswordCredentialIdentity(
-                    serviceIdentifier: service,
-                    user: record.username,
-                    recordIdentifier: "password|\(record.id)"
-                )
-                password.rank = rank
-                identities.append(password)
-            }
-            if record.totpSecret?.isEmpty == false {
-                let code = ASOneTimeCodeCredentialIdentity(
-                    serviceIdentifier: service,
-                    label: record.name,
-                    recordIdentifier: "totp|\(record.id)"
-                )
-                code.rank = rank
-                identities.append(code)
+            // One identity per website, so every saved address offers the login.
+            for host in hosts {
+                let service = ASCredentialServiceIdentifier(identifier: host, type: .domain)
+                if !record.password.isEmpty {
+                    let password = ASPasswordCredentialIdentity(
+                        serviceIdentifier: service,
+                        user: record.username,
+                        recordIdentifier: "password|\(record.id)"
+                    )
+                    password.rank = rank
+                    identities.append(password)
+                }
+                if record.totpSecret?.isEmpty == false {
+                    let code = ASOneTimeCodeCredentialIdentity(
+                        serviceIdentifier: service,
+                        label: record.name,
+                        recordIdentifier: "totp|\(record.id)"
+                    )
+                    code.rank = rank
+                    identities.append(code)
+                }
             }
         }
         for passkey in payload.passkeys ?? [] {
@@ -1256,5 +1261,30 @@ nonisolated enum AutoFillCredentialIdentityBuilder {
             identities.append(identity)
         }
         return identities
+    }
+
+    /// The distinct website hosts QuickType may offer a login on. Rules set to Never,
+    /// regular expressions and app URIs have no host the system can match.
+    static func suggestedHosts(
+        for record: AutoFillCredentialRecord,
+        defaultMatchType: AutoFillURIMatchType
+    ) -> [String] {
+        let rules: [AutoFillURIRule]
+        if let uriRules = record.uriRules, !uriRules.isEmpty {
+            rules = uriRules
+        } else if let serviceIdentifier = record.serviceIdentifier {
+            rules = [AutoFillURIRule(uri: serviceIdentifier, match: nil)]
+        } else {
+            return []
+        }
+        var hosts: [String] = []
+        for rule in rules {
+            let match = rule.match ?? defaultMatchType
+            guard match != .never, match != .regularExpression,
+                  let host = AutoFillDomain.host(rule.uri),
+                  !hosts.contains(host) else { continue }
+            hosts.append(host)
+        }
+        return hosts
     }
 }
