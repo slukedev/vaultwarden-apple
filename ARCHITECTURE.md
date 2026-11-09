@@ -26,6 +26,7 @@ vaultwardenApp/
     └── Assets.xcassets
 
 VaultAutoFillExtension/
+VaultSafariExtension/
 ```
 
 ## Dependency direction
@@ -35,6 +36,7 @@ VaultAutoFillExtension/
 - `Core` contains domain models, state, security utilities, networking contracts, and reusable UI primitives.
 - Feature code may depend on `Core`; `Core` must not depend on a feature.
 - The AutoFill extension is a separate target. Its minimal credential index is encrypted in the shared App Group and published after sync and every local CRUD projection.
+- The Safari extension is a separate target without the Bitwarden SDK. It compiles only `AutoFillDomain` and `AutoFillSiteIndex`, which have no SDK dependency, and hands any vault work to the app through `vaultwarden-app://` links that wait behind the lock like Home Screen quick actions.
 
 ## Security boundaries
 
@@ -43,6 +45,8 @@ VaultAutoFillExtension/
 - Session tokens and locally wrapped keys belong in ThisDeviceOnly Keychain items.
 - Decrypted vault records belong in an encrypted local store with explicit lock-time memory cleanup.
 - AutoFill receives only the minimum credential data required for the selected request.
+- The Safari extension never reads the vault. It reads a site index of truncated HMAC-SHA256 digests (site, site and username, site, username and password) keyed by a random device-only Keychain key, and holds a login typed on the Mac only in a device-only Keychain item that expires after ten minutes. Page paths and queries never leave the page; only the origin does.
+- Website matching uses registrable domains from a bundled public-suffix list that includes hosting platforms. App URIs (`iosapp://`, `androidapp://`) only ever match the same app, never a website.
 
 ## Synchronization model
 

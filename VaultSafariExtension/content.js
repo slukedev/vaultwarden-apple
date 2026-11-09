@@ -355,8 +355,8 @@
         title.className = "title";
         title.id = "title";
         title.textContent = isUpdate
-            ? `Update the password for ${pending.host}?`
-            : `Save a password for ${pending.host}?`;
+            ? `Update password for ${pending.host}?`
+            : `Save password for ${pending.host}?`;
         text.append(title);
         if (pending.username) {
             const detail = document.createElement("div");

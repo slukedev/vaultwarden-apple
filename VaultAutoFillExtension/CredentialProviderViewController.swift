@@ -501,7 +501,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         viewModel.folders = payload.folders ?? []
         viewModel.serviceIdentifiers = serviceIdentifiers
         viewModel.state = .passwordSave
-        let title = request.title?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let title = (request.title as String?)?.trimmingCharacters(in: .whitespacesAndNewlines)
         viewModel.beginCreate(
             suggestedURI: serviceIdentifiers.first ?? request.serviceIdentifier.identifier,
             suggestedName: title?.isEmpty == false ? title : request.serviceIdentifier.displayName,

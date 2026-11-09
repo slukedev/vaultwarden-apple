@@ -685,7 +685,7 @@ nonisolated enum AutoFillSharedVault {
 
     static func siteIndexEntries(
         for records: [AutoFillCredentialRecord],
-        defaultMatchType: AutoFillURIMatchType = defaultURIMatchType
+        defaultMatchType: AutoFillURIMatchType = AutoFillSharedVault.defaultURIMatchType
     ) -> [AutoFillSiteIndex.Entry] {
         records.compactMap { record in
             guard record.isLogin, !record.password.isEmpty else { return nil }

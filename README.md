@@ -23,6 +23,8 @@ A native SwiftUI client for connecting to a user-selected, self-hosted Vaultward
 - Optional iCloud Backup: end-to-end encrypted daily or weekly backups with the key kept in iCloud Keychain, restorable on any of your devices
 - Website icons through your server, with letter tiles when a site has none
 - AutoFill picker modeled on Passwords: Suggested logins for the site first, most recently used first, then everything else
+- Suggestions scoped the way browsers scope cookies, using a public-suffix list that includes hosting platforms, so `alice.github.io` never offers `mallory.github.io`'s password. Every saved website appears in QuickType, and native apps match their `iosapp://` URIs
+- Safari extension for iPhone, iPad and Mac that helps AutoFill recognize login, new-password and verification-code fields, shows how many passwords are saved for the site, and on Mac offers to save or update passwords you type in Safari
 - Siri, Shortcuts and Spotlight actions: Generate Password, Open Vault, Search Vault, Show Verification Codes, New Password, Lock Vault, Sync Vault
 - English and Indonesian localization
 - No analytics, advertising SDKs, or tracking domains
@@ -72,6 +74,15 @@ The app and AutoFill extension must use the same App Group and shared Keychain a
 - Encrypted exports use a Save dialog; Send supports native file selection. The Mac sandbox allows outbound networking and user-selected files.
 - Background refresh runs while the app is running and stops when it quits. Sleep, screen lock, and user-session switching lock the vault. **Settings ▸ Security ▸ Lock Vault** offers Immediately, 1, 5, 10, or 15 minutes, and Never. Timed options measure Mac input inactivity, including while Vaultwarden is focused; switching to Terminal does not itself lock the vault. Immediately locks when leaving the app or dismissing the menu bar panel. New macOS settings default to 5 minutes; existing saved choices are preserved.
 - macOS AutoFill supports passwords, passkeys, and verification codes. Apple's iOS-only system password-save/generation callbacks are omitted on Mac; manual creation and the in-app generator remain available.
+
+## Safari extension
+
+Turn it on in Safari ▸ Settings ▸ Extensions on the Mac, or Settings ▸ Apps ▸ Safari ▸ Extensions on iPhone and iPad, and allow it on every website. **Settings ▸ AutoFill & Passwords** on the Mac shows whether it's on and opens Safari's settings.
+
+- Many sites leave out the `autocomplete` hints Safari uses to offer AutoFill. The extension adds `username`, `current-password`, `new-password` and `one-time-code` only where a field has no hint of its own, so the system offers Vaultwarden's passwords, strong passwords and verification codes on more sites. It never fills anything itself.
+- The toolbar button shows the site and how many saved passwords it has. Fill Password moves to the login field so AutoFill appears. On the Mac, New Password and Show in Vaultwarden open the app.
+- On the Mac, when you sign in or change a password that isn't saved yet, the page asks to save or update it. Save Password opens Vaultwarden's editor with the login filled in, behind the vault's normal lock. iPhone and iPad use the system's own save prompt instead.
+- The extension never sees the vault. The app publishes keyed HMAC-SHA256 hashes of each site, username and password, with the key in this device's Keychain; the extension can only ask whether a typed login is new. A login waiting to be saved stays in the Keychain for at most ten minutes, and only the newest one is kept.
 
 ## iCloud Backup
 
@@ -168,6 +179,7 @@ vaultwardenApp/
 ├── Features/            Vault, Generator, Send, Settings, and onboarding
 └── Resources/           Assets and localized strings
 VaultAutoFillExtension/  Credential Provider extension
+VaultSafariExtension/    Safari Web Extension (iOS, iPadOS and macOS)
 vaultwardenAppTests/     Security and data-flow tests
 ```
 
