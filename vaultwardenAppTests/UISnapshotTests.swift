@@ -120,6 +120,10 @@ enum SnapshotDemo {
         store.selectedItemID = github.id
         #endif
         screens.append(screen("home", windowSize) { RootSplitView().environmentObject(router) })
+        // The split view's sidebar column doesn't draw offscreen, so the sidebar also renders alone.
+        screens.append(screen("sidebar", CGSize(width: 260, height: 620)) {
+            NavigationStack { VaultHomeView(style: .sidebar, searchText: .constant("")) }
+        })
         #if os(iOS)
         screens.append(screen("list", windowSize) {
             NavigationStack { VaultCollectionView(filter: .all, usesColumnSelection: false) }

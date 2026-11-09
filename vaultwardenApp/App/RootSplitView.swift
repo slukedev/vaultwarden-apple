@@ -459,10 +459,25 @@ struct VaultHomeView: View {
 
     private var sidebar: some View {
         List(selection: $store.selectedFilter) {
+            // The main sections as tiles with counts, as in Passwords.
             Section {
-                ForEach(VaultFilter.smartSections) { filter in
-                    sidebarRow(filter)
+                LazyVGrid(columns: sidebarTileColumns, spacing: sidebarTileSpacing) {
+                    ForEach(VaultFilter.smartSections) { filter in
+                        VaultSidebarTile(
+                            title: filter.builtInTitle ?? store.title(for: filter),
+                            icon: filter.icon,
+                            color: filter.color,
+                            count: store.count(for: filter),
+                            isSelected: store.selectedFilter == filter
+                        ) {
+                            store.selectedFilter = filter
+                        }
+                    }
                 }
+                .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 8, trailing: 0))
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+                .selectionDisabled()
             }
 
             Section("Categories") {
@@ -487,6 +502,8 @@ struct VaultHomeView: View {
                     newFolderButton
                         .buttonStyle(.borderless)
                         .controlSize(.small)
+                        .foregroundStyle(.secondary)
+                        .padding(.trailing, 4)
                 }
             }
 
@@ -513,14 +530,25 @@ struct VaultHomeView: View {
     }
 
     private func sidebarRow(_ filter: VaultFilter, icon: String? = nil) -> some View {
+        // Below the tiles every row shares the accent color, as source lists do.
         VaultSidebarLabel(
             title: filter.builtInTitle ?? store.title(for: filter),
-            icon: icon ?? filter.icon,
-            color: filter.color
+            icon: icon ?? filter.sidebarIcon,
+            color: .accentColor
         )
-        // Only open security issues earn a badge; other counts are a click away.
-        .badge(filter == .category(.security) ? store.count(for: filter) : 0)
         .tag(Optional(filter))
+    }
+
+    private var sidebarTileSpacing: CGFloat {
+        #if os(macOS)
+        8
+        #else
+        10
+        #endif
+    }
+
+    private var sidebarTileColumns: [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: sidebarTileSpacing), count: 2)
     }
 
     // MARK: Dashboard (iPhone)

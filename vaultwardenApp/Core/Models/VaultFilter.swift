@@ -148,6 +148,22 @@ enum VaultFilter: Hashable, Identifiable {
         }
     }
 
+    /// Outline glyphs for source-list rows, which sit in one color under the tiles.
+    var sidebarIcon: String {
+        switch self {
+        case .category(.logins): "key"
+        case .category(.cards): "creditcard"
+        case .category(.identities): "person.text.rectangle"
+        case .category(.secureNotes): "note.text"
+        case .category(.sshKeys): "terminal"
+        case .category(.archived): "archivebox"
+        case .unfoldered: "tray"
+        case .folder: "folder"
+        case .collection, .organization: "person.2"
+        default: icon
+        }
+    }
+
     var color: Color {
         switch self {
         case let .category(category):
