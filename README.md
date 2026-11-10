@@ -87,55 +87,59 @@ Turn it on in Safari ▸ Settings ▸ Extensions on the Mac, or Settings ▸ App
 
 ## Apple Passwords (Mac)
 
-Vaultwarden on the Mac can read from and write to Apple Passwords: look up the accounts and verification codes saved for a website, copy a password, add Apple Passwords logins to your vault, and save a vault login to Apple Passwords. It is a native Swift port of the approach used by [apw](https://github.com/bendews/apw).
+Vaultwarden on the Mac can read from and write to Apple Passwords: look up the accounts and verification codes saved for a website, copy a password, add Apple Passwords logins to your vault, and save a vault login to Apple Passwords. It connects the way [Open Passwords (araeyn/apple-passwords-bridge)](https://github.com/araeyn/apple-passwords-bridge) does, reimplemented in Swift inside the app. You don't need a browser extension or the Open Passwords helper app.
 
 ### Setup
 
-1. Install one of Google Chrome, Microsoft Edge, Brave or Chromium. A browser you don't use day to day works best.
-2. In that browser, add Apple's [iCloud Passwords extension](https://chromewebstore.google.com/detail/icloud-passwords/pejdijmoenmkgeppbflobdenhhabjlaj) and open the browser once so the extension finishes installing. You don't need to pair it there.
-3. In Vaultwarden, open **Settings ▸ Apple Passwords** and click **Turn On**.
-4. If macOS asks, allow Vaultwarden in **System Settings ▸ General ▸ Login Items & Extensions ▸ Allow in the Background**. Settings has an **Open…** button for this, and the page updates when you come back.
-5. Choose the browser if you have more than one, then click **Connect**. Apple shows a PIN on this Mac. Type it into the PIN field and click **Pair**.
+1. Have Google Chrome, Microsoft Edge, Brave or another Chromium browser installed in `/Applications` or `~/Applications`. You don't need to use it, sign in to it, or add anything to it.
+2. In Vaultwarden, open **Settings ▸ Apple Passwords** and click **Turn On**.
+3. If macOS asks, allow Vaultwarden in **System Settings ▸ General ▸ Login Items & Extensions ▸ Allow in the Background**. Settings has an **Open…** button for this, and the page updates when you come back.
+4. Choose a browser if more than one is listed, then click **Connect**. macOS shows a PIN. Type it into the PIN field and click **Pair**.
+
+macOS may also show a folder-access or app-management prompt the first time the browser is started this way. Read it before you allow it.
 
 ### Using it
 
 - **Look Up**: type a website, like `example.com`, to list its Apple Passwords accounts and verification codes. **Copy Password** copies a password (cleared from the clipboard after 30 seconds). **Add to Vault** saves the login in Vaultwarden.
 - **Import ▸ Find Missing Logins** checks Apple Passwords for each website already in your vault and lists the accounts you haven't saved in Vaultwarden. Choose the ones you want and click **Add to Vault**.
-- **Save to Apple Passwords** appears in a login's context menu once you're paired. It sends that login's website, user name and password to Apple Passwords, which saves it as new or updates the existing account.
-- Apple may ask you to authenticate with Touch ID or your Mac password before it shares a password.
+- **Save to Apple Passwords** appears in a login's context menu once you're paired. macOS then shows its own prompt to save or update the password, so nothing is written without your confirmation.
+- Apple may ask for Touch ID or your Mac password before it shares a password.
 
 ### How often you enter the PIN
 
-About once per login session. The pairing lives in the hidden browser, so it lasts until you log out or restart the Mac, or the browser quits. Quitting and reopening Vaultwarden keeps it. If a request says Apple Passwords isn't paired, open **Settings ▸ Apple Passwords**: the PIN prompt comes up on its own.
+About once per login session. The pairing key lives only in memory, in the agent and in Apple's helper, and both keep running until you log out or restart. Quitting and reopening Vaultwarden keeps the pairing. If a request says Apple Passwords isn't paired, open **Settings ▸ Apple Passwords**: the PIN prompt comes up on its own.
 
 Vaultwarden doesn't read the PIN for you. The PIN is how Apple confirms that you, at this Mac, approved the connection, and skipping it would remove that check.
 
 ### How it works
 
-macOS only lets allowlisted browsers talk to Apple's password helper (`PasswordManagerBrowserExtensionHelper`). Since macOS 15.4 it refuses other callers, which is why apw's original direct connection stopped working. So:
+Apple's password helper (`PasswordManagerBrowserExtensionHelper`) only runs when an allowlisted browser starts it. Since macOS 15.4 it refuses everything else, which is why apw's original direct connection stopped working.
 
-- The app bundles a small agent, `ApplePasswordsBridge`, in `Contents/MacOS`. It is registered with `SMAppService` as a per-user launch agent and runs outside the app sandbox, because it has to start a browser and read that browser's extensions folder. launchd starts it when the app first connects.
-- The agent copies the installed iCloud Passwords extension to `~/Library/Application Support/Vaultwarden/ApplePasswords`, appends a short relay script to its background worker, and starts the browser headless with a separate profile there. Your normal browser profile isn't touched.
-- The relay script connects back to the agent over a WebSocket on `127.0.0.1`, authenticated with a random token generated for each launch. Requests are encrypted by Apple's extension with its paired session key before they reach Apple's helper. The agent and the relay script never see that key.
-- The app talks to the agent over XPC. Each side checks that the other is signed by the same team (`xyz.0xmwehehe.vaultwardenApp` and `xyz.0xmwehehe.vaultwardenApp.ApplePasswordsBridge`).
-- **Turn Off Apple Passwords** quits the browser and unregisters the agent.
+1. The app bundles a small agent, `ApplePasswordsBridge`, in `Contents/MacOS`. It is registered with `SMAppService` as a per-user launch agent and runs outside the app sandbox, because it starts processes. launchd starts it when the app first connects.
+2. To connect, the agent picks an installed browser that is validly signed with Apple's `com.apple.developer.web-browser.public-key-credential` entitlement. It starts that browser headless with a throwaway profile in a private `/tmp` folder, a mock Keychain, and `--browser-subprocess-path` pointing at the agent itself. Your real browser profile and Keychain aren't touched.
+3. When the browser launches its first subprocess (the agent again), the agent checks over a private socket that the process really is its own executable and a child of that browser. It then hands it two pipes. The subprocess leaves the browser's process group and replaces itself with Apple's helper. Apple's helper now has the browser as its parent and the agent's pipes as stdin and stdout.
+4. The agent quits the browser and deletes its temporary profile. Apple's helper keeps running.
+5. The agent pairs with the helper directly: SRP-6a with the RFC 5054 3072-bit group, with Apple's PIN as the password. Queries are then encrypted with AES-GCM using the resulting session key.
+6. The app talks to the agent over XPC. Each side checks that the other is signed by the same team (`xyz.0xmwehehe.vaultwardenApp` and `xyz.0xmwehehe.vaultwardenApp.ApplePasswordsBridge`).
+7. **Turn Off Apple Passwords** ends the helper and unregisters the agent.
 
 ### Requirements and limits
 
 - Mac only. iPhone and iPad have no Apple Passwords helper that apps can reach.
 - The agent runs outside the sandbox, which rules out Mac App Store distribution for builds that include it. Developer ID builds are fine.
-- Apple Passwords answers per website. There is no way to list every account, so import works from the websites already in your vault plus any you look up.
-- It depends on internals of Apple's extension (its background script's names). If an extension update changes them, connecting fails until the relay script is updated.
-- Arc isn't supported because of how it stores extensions.
+- Apple Passwords answers per website. There's no way to list every account, so import works from the websites already in your vault plus any you look up.
+- This relies on how macOS decides which processes may start its helper. A macOS update could close that path, in which case connecting fails with "didn't start Apple's Passwords helper".
+- Arc and other browsers without Apple's passkey entitlement aren't listed.
 - If you change the bundle identifier or App Group, also update `ApplePasswordsBridgeIdentity` in `vaultwardenApp/Core/ApplePasswords/ApplePasswordsProtocol.swift` and the launch agent plist in `Config/macOS/LaunchAgents`. The Mach service name must start with the App Group identifier so the sandboxed app may connect to it.
 
 ### Troubleshooting
 
-- **"Add the iCloud Passwords extension…"**: the agent couldn't find the extension in any profile of a supported browser. Open that browser once after installing it.
-- **"The iCloud Passwords extension didn't start"**: check the extension is turned on in the browser's extensions page, then click **Connect** again.
-- **"Apple's password helper wasn't found"**: `/Library/Google/Chrome/NativeMessagingHosts/com.apple.passwordmanager.json` is missing. It ships with macOS 14 and later.
+- **"No supported browser found"**: install Google Chrome (or Edge or Brave) in `/Applications`, then reopen the pane.
+- **"… didn't start Apple's Passwords helper"**: choose another browser in the list and click **Connect** again.
+- **"Apple's Passwords helper wasn't found"**: `/Library/Google/Chrome/NativeMessagingHosts/com.apple.passwordmanager.json` is missing. It ships with macOS 14 and later.
+- **"That PIN didn't work"**: click **Show New PIN**. Each PIN works only once.
 - **Stuck on "Allow in Login Items"**: turn Vaultwarden on under Allow in the Background, then come back to Settings.
-- To start over, click **Turn Off Apple Passwords**, delete `~/Library/Application Support/Vaultwarden/ApplePasswords`, and turn it on again.
+- To start over, click **Turn Off Apple Passwords**, then **Turn On** again.
 
 ## iCloud Backup
 

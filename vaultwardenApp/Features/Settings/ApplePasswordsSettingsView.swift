@@ -18,8 +18,6 @@ struct ApplePasswordsSettingsView: View {
 
     @State private var scan = ImportScan()
 
-    private static let extensionURL = URL(string: "https://chromewebstore.google.com/detail/icloud-passwords/pejdijmoenmkgeppbflobdenhhabjlaj")!
-
     private var canManageVault: Bool { store.isAuthenticated && store.isLocked == false }
 
     var body: some View {
@@ -62,7 +60,7 @@ struct ApplePasswordsSettingsView: View {
                         Task { await connection.turnOff() }
                     }
                 } footer: {
-                    Text("Turning off quits the background browser and removes the agent from Login Items.")
+                    Text("Turning off ends the connection to Apple Passwords and removes the agent from Login Items.")
                 }
             }
         }
@@ -107,31 +105,25 @@ struct ApplePasswordsSettingsView: View {
 
     private var aboutSection: some View {
         Section {
-            Label("Needs Google Chrome, Microsoft Edge, Brave or Chromium with Apple's iCloud Passwords extension added.", systemImage: "puzzlepiece.extension")
+            Label("Needs Google Chrome, Microsoft Edge, Brave or another Chromium browser installed. No extension, and your browser profile isn't touched.", systemImage: "globe")
             Label("Pairs with a PIN that Apple shows on this Mac, about once per login.", systemImage: "number")
             Label("Passwords are read only when you ask, and go straight into your encrypted vault.", systemImage: "lock")
         } header: {
             Text("How It Works")
         } footer: {
-            Text("Vaultwarden runs that browser hidden in the background, because macOS only lets browsers talk to Apple Passwords.")
+            Text("macOS only lets browsers start Apple Passwords' helper, so Vaultwarden opens that browser hidden for a moment to start it, then closes it.")
         }
     }
 
     @ViewBuilder
     private var browserSection: some View {
-        let browsers = connection.status?.browsers ?? []
-        let usable = browsers.filter(\.hasExtension)
+        let usable = connection.status?.browsers ?? []
         Section {
-            if browsers.isEmpty {
-                Text("No supported browser found. Install Google Chrome, Microsoft Edge, Brave or Chromium.")
-                    .foregroundStyle(.secondary)
+            if connection.status == nil {
+                ProgressView().frame(maxWidth: .infinity)
             } else if usable.isEmpty {
-                SettingsDetailRow(
-                    title: Text("Add the iCloud Passwords Extension"),
-                    detail: Text("Add it to \(browsers.map(\.name).formatted(.list(type: .or))) and sign in once, then come back.")
-                ) {
-                    Link("Get Extension…", destination: Self.extensionURL)
-                }
+                Text("No supported browser found. Install Google Chrome, Microsoft Edge, Brave or another Chromium browser, then come back.")
+                    .foregroundStyle(.secondary)
             } else {
                 Picker("Browser", selection: browserBinding(usable)) {
                     ForEach(usable) { browser in
@@ -146,7 +138,7 @@ struct ApplePasswordsSettingsView: View {
         } header: {
             Text("Connection")
         } footer: {
-            Text("The browser keeps running hidden until you log out, so you pair about once per login. You'll pair again after a restart, a logout, or if the browser quits.")
+            Text("The connection lasts until you log out, so you pair about once per login. You'll pair again after a restart or a logout.")
         }
     }
 
@@ -302,7 +294,7 @@ struct ApplePasswordsSettingsView: View {
 
     // MARK: - Actions
 
-    /// Starts the browser if needed and, when it isn't paired yet, asks Apple for the
+    /// Starts Apple's helper if needed and, when it isn't paired yet, asks Apple for the
     /// PIN in the same step.
     private func connectAndPair() {
         run {

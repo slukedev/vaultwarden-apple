@@ -4,13 +4,13 @@ import Security
 // Shared by the app and the ApplePasswordsBridge agent. Foundation and Security only,
 // so it compiles in both targets and in the tests on every platform.
 //
-// How the connection works (a Swift port of the approach in github.com/bendews/apw):
-// macOS only lets allowlisted browsers talk to Apple's PasswordManagerBrowserExtensionHelper.
-// The bridge agent therefore starts a headless Chromium browser with a private copy of
-// Apple's own iCloud Passwords extension. A short script appended to that extension's
-// background worker relays requests between the agent (over a loopback WebSocket that
-// requires a random token) and the extension's already-encrypted session with the helper.
-// Pairing uses Apple's PIN prompt, exactly as it does in a browser.
+// How the connection works (the approach of github.com/araeyn/apple-passwords-bridge):
+// macOS only lets Apple's PasswordManagerBrowserExtensionHelper run when an allowlisted
+// browser starts it. The agent briefly starts an installed Chromium browser that carries
+// Apple's passkey entitlement, headless and with a throwaway profile, and names itself as
+// that browser's subprocess. When the browser launches it, the agent's subprocess replaces
+// itself with Apple's helper, keeping pipes the agent handed it, and the browser is quit.
+// The agent then pairs with the helper using Apple's PIN and talks to it directly.
 
 // MARK: - Identity
 
@@ -21,8 +21,8 @@ nonisolated enum ApplePasswordsBridgeIdentity {
     static let launchAgentPlistName = "xyz.0xmwehehe.vaultwardenApp.ApplePasswordsBridge.plist"
     static let appIdentifier = "xyz.0xmwehehe.vaultwardenApp"
     static let bridgeIdentifier = "xyz.0xmwehehe.vaultwardenApp.ApplePasswordsBridge"
-    /// The Chrome Web Store ID of Apple's iCloud Passwords extension.
-    static let extensionID = "pejdijmoenmkgeppbflobdenhhabjlaj"
+    /// The origin of Apple's iCloud Passwords extension, which the helper expects as its argument.
+    static let helperOrigin = "chrome-extension://pejdijmoenmkgeppbflobdenhhabjlaj/"
 
     /// A code requirement for a peer signed by the same team as this process. Builds
     /// signed to run locally have no team; they fall back to the identifier alone.
@@ -61,7 +61,7 @@ nonisolated protocol ApplePasswordsBridgeXPC {
 
 nonisolated enum ApplePasswordsBridgeRequest: Codable, Sendable, Equatable {
     case status
-    /// Starts the browser, preferring `browserID` when it is installed with the extension.
+    /// Starts Apple's helper through `browserID` when that browser qualifies.
     case connect(browserID: String?)
     /// Shows Apple's pairing PIN on this Mac.
     case requestPIN
@@ -70,7 +70,7 @@ nonisolated enum ApplePasswordsBridgeRequest: Codable, Sendable, Equatable {
     case password(site: String, username: String)
     case save(site: String, username: String, password: String)
     case oneTimeCodes(site: String)
-    /// Quits the browser. The agent exits once nothing is connected.
+    /// Ends the helper and its pairing.
     case disconnect
 }
 
@@ -82,19 +82,20 @@ nonisolated enum ApplePasswordsBridgeResponse: Codable, Sendable, Equatable {
     case failure(String)
 }
 
+/// An installed Chromium browser Apple lets start its helper.
 nonisolated struct ApplePasswordsBrowser: Codable, Sendable, Hashable, Identifiable {
+    /// The app's bundle identifier.
     var id: String
     var name: String
-    var hasExtension: Bool
 }
 
 nonisolated struct ApplePasswordsBridgeStatus: Codable, Sendable, Equatable {
     enum Phase: String, Codable, Sendable {
-        /// No browser running.
+        /// Apple's helper isn't running.
         case stopped
-        /// The browser is starting or the extension hasn't connected yet.
+        /// Starting Apple's helper.
         case starting
-        /// Running, waiting for the PIN.
+        /// The helper is running and waiting for the PIN.
         case needsPairing
         /// Paired: requests reach Apple Passwords.
         case ready
@@ -158,7 +159,7 @@ nonisolated enum ApplePasswordsStatusCode: Int, Sendable {
         case .duplicateItem: "That account is already in Apple Passwords."
         case .unknownAction: "Apple Passwords doesn't support that request."
         case .invalidSession: "Apple Passwords isn't paired. Pair again with a new PIN."
-        case .serverError: "Unexpected response from the iCloud Passwords extension."
+        case .serverError: "Unexpected response from Apple Passwords."
         }
     }
 }
@@ -195,14 +196,20 @@ nonisolated enum ApplePasswordsSite {
     }
 }
 
-// MARK: - Extension messages
+// MARK: - Commands
 
-/// The commands the iCloud Passwords extension sends its native helper.
+/// Commands of the helper's native-messaging protocol.
 nonisolated enum ApplePasswordsCommand: Int, Sendable {
+    case end = 0
     case handshake = 2
     case getLoginNamesForURL = 4
     case getPasswordForLoginName = 5
     case setPasswordForLoginNameAndURL = 6
+    /// Unsolicited: Passwords was turned off or signed out; the pairing is gone.
+    case passwordsDisabled = 9
+    /// Unsolicited: the helper wants a new pairing.
+    case reloginNeeded = 10
+    case getCapabilities = 14
     case getOneTimeCodes = 16
     case didFillOneTimeCode = 17
 }
@@ -213,88 +220,9 @@ nonisolated enum ApplePasswordsAction: Int, Sendable {
     case ghostSearch = 5
 }
 
-/// What the agent sends the script inside the extension. `request` messages are
-/// encrypted by the extension with its paired session key before they reach the helper.
-nonisolated enum ApplePasswordsExtensionMessage {
-    static func challenge() -> [String: Any] {
-        ["kind": "handshake"]
-    }
-
-    static func verify(pin: String) -> [String: Any] {
-        ["kind": "handshake", "pin": pin]
-    }
-
-    static func state() -> [String: Any] {
-        ["kind": "state"]
-    }
-
-    static func accounts(site: String) -> [String: Any] {
-        request(
-            .getLoginNamesForURL, qid: "CmdGetLoginNames4URL", tab: 1, url: site,
-            body: ["ACT": ApplePasswordsAction.ghostSearch.rawValue, "URL": site]
-        )
-    }
-
-    static func password(site: String, username: String) -> [String: Any] {
-        request(
-            .getPasswordForLoginName, qid: "CmdGetPassword4LoginName", tab: 0, url: site,
-            body: ["ACT": ApplePasswordsAction.search.rawValue, "URL": site, "USR": username]
-        )
-    }
-
-    static func save(site: String, username: String, password: String) -> [String: Any] {
-        request(
-            .setPasswordForLoginNameAndURL, qid: "CmdSetPassword4LoginName_URL", tab: 0, url: nil,
-            body: [
-                "ACT": ApplePasswordsAction.maybeAdd.rawValue,
-                "URL": "", "USR": "", "PWD": "",
-                "NURL": site, "NUSR": username, "NPWD": password,
-            ]
-        )
-    }
-
-    static func oneTimeCodes(site: String) -> [String: Any] {
-        request(
-            .getOneTimeCodes, qid: "CmdDidFillOneTimeCode", tab: 0, url: nil,
-            body: [
-                "ACT": ApplePasswordsAction.ghostSearch.rawValue,
-                "TYPE": "oneTimeCodes",
-                "frameURLs": [ApplePasswordsSite.frameURL(site)],
-            ]
-        )
-    }
-
-    private static func request(
-        _ command: ApplePasswordsCommand,
-        qid: String,
-        tab: Int,
-        url: String?,
-        body: [String: Any]
-    ) -> [String: Any] {
-        var message: [String: Any] = [
-            "kind": "request",
-            "cmd": command.rawValue,
-            "qid": qid,
-            "tabId": tab,
-            "frameId": tab,
-            "body": body,
-        ]
-        if let url { message["url"] = url }
-        return message
-    }
-}
-
-// MARK: - Extension replies
+// MARK: - Replies
 
 nonisolated enum ApplePasswordsReply {
-    /// The script answers `{id, data}` on success and `{id, status, error}` otherwise.
-    static func data(from reply: [String: Any]) throws -> [String: Any] {
-        if let data = reply["data"] as? [String: Any] { return data }
-        let code = (reply["status"] as? Int).flatMap { ApplePasswordsStatusCode(rawValue: $0) } ?? .serverError
-        if code == .success { return ["STATUS": 0] }
-        throw ApplePasswordsError(code, reply["error"] as? String)
-    }
-
     /// Entries from a decrypted payload. The helper sends either an `Entries` array or
     /// numbered `Entry_N` keys.
     static func entries(from data: [String: Any]) throws -> [[String: Any]] {

@@ -2,8 +2,8 @@ import Foundation
 
 // ApplePasswordsBridge: a per-user launch agent bundled inside Vaultwarden.app and
 // registered with SMAppService. launchd starts it on demand when the app connects to
-// its Mach service. It runs outside the app sandbox because it has to start a browser
-// and read that browser's extensions folder.
+// its Mach service. It runs outside the app sandbox because it starts a browser and
+// Apple's Passwords helper. See HelperLauncher for how.
 
 nonisolated final class BridgeService: NSObject, NSXPCListenerDelegate, ApplePasswordsBridgeXPC, @unchecked Sendable {
     private let controller = BridgeController()
@@ -32,7 +32,7 @@ nonisolated final class BridgeService: NSObject, NSXPCListenerDelegate, ApplePas
         }
     }
 
-    /// The browser, and with it the pairing, stays up for the whole login session, so
+    /// Apple's helper, and with it the pairing, stays up for the whole login session, so
     /// Apple's PIN is needed about once per login instead of every time Vaultwarden opens.
     /// launchd stops the agent at logout; Turn Off in Settings stops it sooner.
     private func connectionEnded() {
@@ -43,6 +43,12 @@ nonisolated final class BridgeService: NSObject, NSXPCListenerDelegate, ApplePas
         await controller.stop()
     }
 }
+
+// When a browser starts this executable as its subprocess, become Apple's helper.
+HelperLauncher.runHandoffIfRequested()
+
+// A write to a helper that just exited must fail, not kill the agent.
+signal(SIGPIPE, SIG_IGN)
 
 let service = BridgeService()
 let listener = NSXPCListener(machServiceName: ApplePasswordsBridgeIdentity.machServiceName)

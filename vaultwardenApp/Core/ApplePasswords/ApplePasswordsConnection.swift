@@ -87,7 +87,7 @@ final class ApplePasswordsConnection: ObservableObject {
         }
     }
 
-    /// Starts the browser if needed. Throws with the agent's explanation on failure.
+    /// Starts Apple's helper if needed. Throws with the agent's explanation on failure.
     func connect() async throws {
         let response = try await working { try await self.perform(.connect(browserID: self.preferredBrowserID)) }
         if case .status(let value) = response { status = value }
@@ -197,7 +197,7 @@ final class ApplePasswordsConnection: ObservableObject {
             }
         }
         connection.interruptionHandler = { [weak self] in
-            // The agent restarted, which took the browser and the pairing with it.
+            // The agent restarted, which took Apple's helper and the pairing with it.
             Task { @MainActor in self?.status = nil }
         }
         connection.resume()
