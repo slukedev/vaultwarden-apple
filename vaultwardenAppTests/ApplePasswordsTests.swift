@@ -49,7 +49,9 @@ struct APBigUIntTests {
         let exponent = try #require(APBigUInt(hex: "10000000000000005"))
         #expect(APMontgomery(modulus: m61).power(APBigUInt(7), exponent) == APBigUInt(hex: String(558545864083284007, radix: 16)))
         let m127 = try #require(APBigUInt(hex: "7fffffffffffffffffffffffffffffff"))
-        let result = APMontgomery(modulus: m127).power(try #require(APBigUInt(hex: "deadbeef")), try #require(APBigUInt(hex: "123456789abcdef")))
+        let base = try #require(APBigUInt(hex: "deadbeef"))
+        let power = try #require(APBigUInt(hex: "123456789abcdef"))
+        let result = APMontgomery(modulus: m127).power(base, power)
         #expect(result == APBigUInt(hex: "5927e79cd78b029b869a6485f3a645e2"))
         #expect(APMontgomery(modulus: m127).power(APBigUInt(9), APBigUInt(0)) == APBigUInt(1))
     }
@@ -120,8 +122,10 @@ struct ApplePasswordsNativeMessageTests {
 
     private func decodePAKE(_ message: [String: Any]) throws -> [String: Any] {
         let msg = try #require(message["msg"] as? [String: Any])
-        let data = try #require(Data(base64Encoded: try #require(msg["PAKE"] as? String)))
-        return try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let encoded = try #require(msg["PAKE"] as? String)
+        let data = try #require(Data(base64Encoded: encoded))
+        let object = try JSONSerialization.jsonObject(with: data)
+        return try #require(object as? [String: Any])
     }
 
     @Test func challengeCarriesTheClientKey() throws {
